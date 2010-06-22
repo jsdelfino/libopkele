@@ -135,36 +135,63 @@ else
  AM_CONDITIONAL([HAVE_DOT],[false])
 fi
 
-LIBCURL_CHECK_CONFIG(,,,[
- AC_MSG_ERROR([no required libcurl library. get one from http://curl.haxx.se/])
-])
+cppflags="${CPPFLAGS}"
+defaultlibs="${LIBS}"
 
-AC_CHECK_HEADER([expat.h],[
- AC_CHECK_LIB([expat],[XML_ParserCreate],[
-  EXPAT_LIBS=-lexpat
-  EXPAT_CFLAGS=
-  AC_SUBST([EXPAT_LIBS])
-  AC_SUBST([EXPAT_CFLAGS])
- ],[
-  AC_MSG_ERROR([no required expat library. get one from http://expat.sourceforge.net/])
- ])
-],[
- AC_MSG_ERROR([no required expat library. get one from http://expat.sourceforge.net/])
+AC_MSG_CHECKING([for curl])
+AC_ARG_WITH([curl], [AC_HELP_STRING([--with-curl=PATH], [path to installed curl [default=/usr]])], [
+  LIBCURL_CPPFLAGS="-I${withval}/include"
+  LIBCURL="-L${withval}/lib -R${withval}/lib -lcurl"
+  AC_MSG_RESULT("${withval}")
+], [
+  LIBCURL_CPPFLAGS=""
+  LIBCURL="-lcurl"
+  AC_MSG_RESULT(/usr)
 ])
+AC_SUBST(LIBCURL_CPPFLAGS)
+AC_SUBST(LIBCURL)
+CPPFLAGS="${LIBCURL_CPPFLAGS}"
+AC_CHECK_HEADER([curl/curl.h], [], [AC_MSG_ERROR([couldn't find a suitable curl library, use --with-curl=PATH])])
+LIBS="${LIBCURL}"
+AC_CHECK_LIB([curl], [curl_global_init], [], [AC_MSG_ERROR([couldn't find a suitable curl library, use --with-curl=PATH])])
 
-AC_CHECK_HEADERS([tidy.h tidy/tidy.h],[
- test -z "$TIDY_LIBS" && AC_CHECK_LIB([tidy],[tidyParseBuffer],[
-  TIDY_LIBS=-ltidy
-  TIDY_CFLAGS=
-  AC_SUBST([TIDY_LIBS])
-  AC_SUBST([TIDY_CFLAGS])
- ],[
-  AC_MSG_ERROR([no required htmltidy library found. get one from http://tidy.sourceforge.net/])
- ])
-],[
- test -z "$TIDY_LIBS" -a "$ac_header" = "tidy/tidy.h" \
- && AC_MSG_ERROR([no required htmltidy library found. get one from http://tidy.sourceforge.net/])
+AC_MSG_CHECKING([for expat])
+AC_ARG_WITH([expat], [AC_HELP_STRING([--with-expat=PATH], [path to installed expat [default=/usr]])], [
+  EXPAT_CFLAGS="-I${withval}/include"
+  EXPAT_LIBS="-L${withval}/lib -R${withval}/lib -lexpat"
+  AC_MSG_RESULT("${withval}")
+], [
+  EXPAT_CFLAGS=""
+  EXPAT_LIBS="-lexpat"
+  AC_MSG_RESULT(/usr)
 ])
+AC_SUBST(EXPAT_CFLAGS)
+AC_SUBST(EXPAT_LIBS)
+CPPFLAGS="${EXPAT_CFLAGS}"
+AC_CHECK_HEADER([expat.h], [], [AC_MSG_ERROR([couldn't find a suitable expat library, use --with-expat=PATH])])
+LIBS="${EXPAT_LIBS}"
+AC_CHECK_LIB([expat], [XML_ParserCreate], [], [AC_MSG_ERROR([couldn't find a suitable expat library, use --with-expat=PATH])])
+
+AC_MSG_CHECKING([for htmltidy])
+AC_ARG_WITH([htmltidy], [AC_HELP_STRING([--with-htmltidy=PATH], [path to installed htmltidy [default=/usr]])], [
+  TIDY_CFLAGS="-I${withval}/include"
+  TIDY_LIBS="-L${withval}/lib -R${withval}/lib -ltidy"
+  AC_MSG_RESULT("${withval}")
+], [
+  TIDY_CFLAGS=""
+  TIDY_LIBS="-ltidy"
+  AC_MSG_RESULT(/usr)
+])
+AC_SUBST(TIDY_CFLAGS)
+AC_SUBST(TIDY_LIBS)
+CPPFLAGS="${TIDY_CFLAGS}"
+AC_CHECK_HEADER([tidy.h], [], [AC_MSG_ERROR([couldn't find a suitable htmltidy library, use --with-htmltidy=PATH])])
+AC_DEFINE([HAVE_TIDY_H],,[defined in presence of tidy.h])
+LIBS="${TIDY_LIBS}"
+AC_CHECK_LIB([tidy], [tidyParseBuffer], [], [AC_MSG_ERROR([couldn't find a suitable htmltidy library, use --with-tidy=PATH])])
+
+CPPFLAGS="${cppflags}"
+LIBS="${defaultlibs}"
 
 PKG_CHECK_MODULES([SQLITE3],[sqlite3],[have_sqlite3=true],[have_sqlite3=false])
 AM_CONDITIONAL([HAVE_SQLITE3],[$have_sqlite3])
