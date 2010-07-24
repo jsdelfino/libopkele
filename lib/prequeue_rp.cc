@@ -29,11 +29,12 @@ namespace opkele {
 	    OP_verifier& operator*() { return *this; }
 	    OP_verifier& operator=(const openid_endpoint_t& oep) {
 		if(oep.uri==OP) {
-		    if(oep.claimed_id==IDURI_SELECT20
-			    || oep.local_id==IDURI_SELECT20 )
-			throw bad_input(OPKELE_CP_ "claimed_id is an OP-Id");
-		    if(oep.local_id==id)
+		    if(oep.local_id==id) {
+		        if(oep.claimed_id==IDURI_SELECT20
+			        || oep.local_id==IDURI_SELECT20 )
+			    throw bad_input(OPKELE_CP_ "claimed_id is an OP-Id");
 			throw __OP_verifier_good_input(OPKELE_CP_ "Found corresponding endpoint");
+            }
 		}
 		return *this;
 	    }
